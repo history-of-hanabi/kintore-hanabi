@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>筋トレ花火プロデューサー</title>
+<meta name="description" content="腕立て・腹筋・スクワットを続けるほど花火クレジットが貯まり、尺玉やスターマインを買って自分だけの花火大会をプロデュースできるアプリ。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💪</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14100c;
+    --card:#1f1a15;
+    --line:#332a20;
+    --ember:#ff5a36;
+    --gold:#f7b733;
+    --text:#f5efe6;
+    --text-dim:#a89c8c;
+    --done:#3a8f6b;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; min-height:100vh;
+    background:var(--bg); color:var(--text);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    padding:24px 16px 48px;
+  }
+  .app{ max-width:440px; margin:0 auto; }
+
+  header{ text-align:center; margin-bottom:20px; }
+  header h1{ font-size:1.2rem; margin:0 0 6px; }
+  header p{ margin:0; font-size:0.78rem; color:var(--text-dim); line-height:1.6; }
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:18px 16px; margin-bottom:16px;
+  }
+  .card h2{ font-size:0.85rem; margin:0 0 14px; color:var(--text-dim); }
+
+  .tabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .tabs button{
+    flex:1; padding:11px 0; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-dim); font-weight:700; font-size:0.85rem;
+    cursor:pointer;
+  }
+  .tabs button.active{ background:linear-gradient(135deg, var(--ember), var(--gold)); color:#1a1208; border-color:transparent; }
+
+  .counter-card{ text-align:center; }
+  .today-label{ font-size:0.75rem; color:var(--text-dim); margin-bottom:6px; }
+  .count-number{ font-size:3.2rem; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
+  .count-unit{ font-size:0.9rem; color:var(--text-dim); margin-bottom:16px; }
+
+  .tap-btn{
+    width:130px; height:130px; border-radius:50%; margin:0 auto 12px;
+    border:none; background:radial-gradient(circle at 35% 30%, var(--gold), var(--ember));
+    color:#1a1208; font-size:1rem; font-weight:900;
+    box-shadow:0 12px 26px rgba(255,90,54,0.35);
+    cursor:pointer; transition:transform 0.1s ease;
+  }
+  .tap-btn:active{ transform:scale(0.94); }
+
+  .minus-btn{
+    border:1px solid var(--line); background:transparent; color:var(--text-dim);
+    padding:7px 16px; border-radius:999px; font-size:0.78rem; cursor:pointer;
+  }
+
+  .goal-row{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-top:14px; font-size:0.85rem; color:var(--text-dim);
+  }
+  .goal-row b{ color:var(--text); font-variant-numeric:tabular-nums; }
+  .goal-row button{
+    border:1px solid var(--line); background:transparent; color:var(--gold);
+    padding:4px 10px; border-radius:999px; font-size:0.72rem; cursor:pointer;
+  }
+  .goal-status{ margin-top:8px; font-size:0.8rem; font-weight:700; }
+  .goal-status.done{ color:var(--done); }
+  .goal-status.pending{ color:var(--text-dim); font-weight:400; }
+
+  /* 継続状況 */
+  .streak-row{ display:flex; gap:10px; margin-bottom:14px; }
+  .streak-box{ flex:1; text-align:center; }
+  .streak-box .n{ font-size:1.6rem; font-weight:900; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .streak-box .k{ font-size:0.7rem; color:var(--text-dim); }
+  .heatmap{ display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
+  .heatmap .day{ aspect-ratio:1; border-radius:5px; background:#2a231b; }
+  .heatmap .day.trained{ background:linear-gradient(135deg, var(--ember), var(--gold)); }
+  .heatmap .day.today{ box-shadow:0 0 0 2px var(--gold); }
+
+  /* クレジット */
+  .credit-balance{ text-align:center; margin-bottom:4px; }
+  .credit-balance .n{ font-size:2.2rem; font-weight:900; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .credit-balance .k{ font-size:0.75rem; color:var(--text-dim); }
+  .credit-hint{ font-size:0.72rem; color:var(--text-dim); text-align:center; line-height:1.7; margin-top:8px; }
+
+  /* ショップ */
+  .shop-item{
+    display:flex; align-items:center; gap:12px; padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .shop-item:last-child{ border-bottom:none; }
+  .shop-icon{ font-size:1.6rem; width:36px; text-align:center; flex-shrink:0; }
+  .shop-info{ flex:1; min-width:0; }
+  .shop-name{ font-weight:700; font-size:0.88rem; }
+  .shop-note{ font-size:0.68rem; color:var(--text-dim); line-height:1.5; margin-top:2px; }
+  .shop-buy{
+    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .shop-buy button{
+    padding:8px 14px; border-radius:999px; border:none; font-weight:700; font-size:0.78rem;
+    background:var(--gold); color:#1a1208; cursor:pointer; white-space:nowrap;
+  }
+  .shop-buy button:disabled{ background:#3a3226; color:var(--text-dim); cursor:not-allowed; }
+  .shop-cost{ font-size:0.66rem; color:var(--text-dim); }
+
+  /* プログラム */
+  .program-list{ display:flex; flex-direction:column; gap:8px; }
+  .program-row{
+    display:flex; align-items:center; gap:10px; font-size:0.85rem;
+    background:#171310; border-radius:10px; padding:9px 12px;
+  }
+  .program-row .icon{ font-size:1.2rem; }
+  .program-row .name{ flex:1; }
+  .program-row .count{ color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums; }
+  .empty-note{ font-size:0.78rem; color:var(--text-dim); text-align:center; padding:10px 0; }
+
+  .show-btn{
+    width:100%; padding:14px 0; margin-top:14px; border-radius:999px; border:none;
+    background:linear-gradient(135deg, var(--ember), var(--gold)); color:#1a1208;
+    font-weight:900; font-size:0.95rem; cursor:pointer;
+  }
+  .show-btn:disabled{ background:#3a3226; color:var(--text-dim); cursor:not-allowed; }
+
+  .launch-stage{ position:relative; width:100%; height:0; overflow:visible; }
+  .launch-dot{
+    position:absolute; left:50%; bottom:0; width:9px; height:9px; margin-left:-4.5px;
+    border-radius:50%; background:var(--gold); box-shadow:0 0 10px 3px rgba(247,183,51,0.8);
+    opacity:0;
+  }
+  .launch-dot.go{ animation:rise 0.7s ease-out forwards; }
+  @keyframes rise{ 0%{opacity:1;bottom:0;} 85%{opacity:1;} 100%{opacity:0;bottom:150px;} }
+  .spark{
+    position:absolute; left:50%; bottom:150px; width:7px; height:7px; margin-left:-3.5px;
+    border-radius:50%; opacity:0;
+  }
+  .spark.go{ animation:burst 0.8s ease-out forwards; }
+  @keyframes burst{
+    0%{ opacity:1; transform:translate(0,0) scale(1); }
+    100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(0.4); }
+  }
+
+  .show-caption{ text-align:center; font-size:0.85rem; color:var(--gold); min-height:1.4em; margin-top:6px; }
+
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translate(-50%, 20px);
+    background:#2c2416; color:var(--gold); padding:10px 18px; border-radius:999px;
+    font-size:0.82rem; font-weight:700; opacity:0; pointer-events:none;
+    transition:all 0.3s ease; z-index:60;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+  .edit-overlay{
+    display:none; position:fixed; inset:0; background:rgba(10,7,4,0.6);
+    align-items:center; justify-content:center; z-index:60; padding:20px;
+  }
+  .edit-overlay.show{ display:flex; }
+  .edit-card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:22px; width:100%; max-width:300px; text-align:center;
+  }
+  .edit-card p{ font-size:0.82rem; color:var(--text-dim); margin:0 0 12px; }
+  .edit-card input{
+    width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
+    background:#14100c; color:var(--text); font-size:1.2rem; text-align:center;
+    margin-bottom:14px; font-variant-numeric:tabular-nums;
+  }
+  .edit-actions{ display:flex; gap:8px; }
+  .edit-actions button{ flex:1; padding:11px 0; border-radius:999px; border:none; font-weight:700; cursor:pointer; }
+  .edit-cancel{ background:#2a231b; color:var(--text-dim); }
+  .edit-save{ background:var(--gold); color:#1a1208; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>筋トレ花火プロデューサー</h1>
+    <p>トレーニングを続けた日数に応じて花火クレジットが貯まります。貯めたクレジットで玉を買い、自分だけの花火大会をプロデュースしましょう。</p>
+  </header>
+
+  <div class="card counter-card">
+    <div class="tabs" id="tabs">
+      <button type="button" data-ex="pushup" class="active">腕立て伏せ</button>
+      <button type="button" data-ex="situp">腹筋</button>
+      <button type="button" data-ex="squat">スクワット</button>
+    </div>
+
+    <div class="today-label">今日の回数</div>
+    <div class="count-number" id="countNumber">0</div>
+    <div class="count-unit">回</div>
+
+    <button class="tap-btn" id="tapBtn">タップして<br>+1</button>
+    <div><button class="minus-btn" id="minusBtn">1回取り消す</button></div>
+
+    <div class="goal-row">
+      目標 <b id="goalValue">30</b> 回
+      <button type="button" id="editGoalBtn">目標を変更</button>
+    </div>
+    <div class="goal-status" id="goalStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>継続状況</h2>
+    <div class="streak-row">
+      <div class="streak-box"><div class="n" id="streakNum">0</div><div class="k">日連続</div></div>
+      <div class="streak-box"><div class="n" id="totalDaysNum">0</div><div class="k">累計トレーニング日数</div></div>
+    </div>
+    <div class="heatmap" id="heatmap"></div>
+  </div>
+
+  <div class="card">
+    <h2>花火クレジット</h2>
+    <div class="credit-balance">
+      <div class="n" id="creditNum">0</div>
+      <div class="k">クレジット</div>
+    </div>
+    <p class="credit-hint">いずれかの種目で今日の目標を達成すると+1、3種目すべて達成した日は+1ボーナス。1日最大4クレジットまで。</p>
+  </div>
+
+  <div class="card">
+    <h2>花火大会をプロデュース</h2>
+    <div id="shopList"></div>
+  </div>
+
+  <div class="card">
+    <h2>あなたの花火大会プログラム</h2>
+    <div class="program-list" id="programList"></div>
+    <button class="show-btn" id="showBtn">🎆 花火大会を開催する</button>
+    <div class="show-caption" id="showCaption"></div>
+    <div class="launch-stage" id="launchStage"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-card">
+    <p>新しい目標回数を入力してください</p>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="goalInput">
+    <div class="edit-actions">
+      <button class="edit-cancel" id="goalCancelBtn">キャンセル</button>
+      <button class="edit-save" id="goalSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'kintore-hanabi-producer';
+
+  const EXERCISES = {
+    pushup: { label: '腕立て伏せ' },
+    situp: { label: '腹筋' },
+    squat: { label: 'スクワット' }
+  };
+
+  // 花火大会プロデュース用のショップ(実在する花火の種類・特徴にもとづく)
+  const SHOP = [
+    { id: 'go5', icon: '✨', name: '5号玉 ×1', cost: 4,
+      note: '5号玉は、花火大会のプログラムで比較的手頃な号数として、序盤でよく使われるといわれています。' },
+    { id: 'shakudama', icon: '🎇', name: '尺玉(10号) ×1', cost: 12,
+      note: '尺玉は1玉で約8kgの重さがあるといわれています。' },
+    { id: 'starmine', icon: '🎆', name: 'スターマイン ×1台', cost: 24,
+      note: '複数の筒を連結し、一つの導火線で連続点火する仕掛け花火。「スターマイン」の名は英語のstar mineに由来するといわれています。' },
+    { id: 'nishaku', icon: '💥', name: '二尺玉(20号) ×1', cost: 45,
+      note: '二尺玉は尺玉(10号)のさらに倍の号数(20号)にあたり、特に大型の筒と入念な安全確保が必要とされる花火です。' },
+    { id: 'niagara', icon: '🌊', name: 'ナイアガラ ×1', cost: 60,
+      note: 'ナイアガラは玉ではなく、川などに張った線に着火し、滝のように光が流れ落ちる仕掛け花火。大会のフィナーレでよく使われます。' },
+    { id: 'sanshaku', icon: '🌟', name: '三尺玉 ×1', cost: 100,
+      note: '三尺玉は直径約90cm。打ち上げ高さ・開いたときの直径ともに約600mに達するといわれる、特大の花火です。' }
+  ];
+
+  function defaultData(){
+    return { daily: {}, goals: { pushup: 30, situp: 30, squat: 30 }, credits: 0, program: {} };
+  }
+  function loadData(){
+    try{
+      const d = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return d || defaultData();
+    }catch(e){ return defaultData(); }
+  }
+  function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+  let data = loadData();
+  let currentEx = 'pushup';
+
+  function isoDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function todayISO(){ return isoDate(new Date()); }
+
+  function todayEntry(){
+    const t = todayISO();
+    if(!data.daily[t]) data.daily[t] = { pushup: 0, situp: 0, squat: 0, flags: {} };
+    if(!data.daily[t].flags) data.daily[t].flags = {};
+    return data.daily[t];
+  }
+
+  function dayTotal(entry){ return entry.pushup + entry.situp + entry.squat; }
+
+  function calcStreak(){
+    let streak = 0;
+    let d = new Date();
+    while(true){
+      const key = isoDate(d);
+      const entry = data.daily[key];
+      if(entry && dayTotal(entry) > 0){
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else break;
+    }
+    return streak;
+  }
+  function calcTotalDays(){
+    return Object.values(data.daily).filter(e => dayTotal(e) > 0).length;
+  }
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function checkAndGrantCredits(){
+    const entry = todayEntry();
+    let granted = 0;
+    ['pushup','situp','squat'].forEach(ex => {
+      if(!entry.flags[ex] && entry[ex] >= data.goals[ex]){
+        entry.flags[ex] = true;
+        granted += 1;
+      }
+    });
+    if(!entry.flags.bonus && entry.flags.pushup && entry.flags.situp && entry.flags.squat){
+      entry.flags.bonus = true;
+      granted += 1;
+    }
+    if(granted > 0){
+      data.credits += granted;
+      showToast(`+${granted} クレジット獲得!`);
+    }
+  }
+
+  function renderHeatmap(){
+    const heatmap = document.getElementById('heatmap');
+    heatmap.innerHTML = '';
+    const today = new Date();
+    const cells = [];
+    for(let i = 27; i >= 0; i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = isoDate(d);
+      const entry = data.daily[key];
+      const trained = entry && dayTotal(entry) > 0;
+      cells.push(`<div class="day ${trained ? 'trained' : ''} ${i === 0 ? 'today' : ''}" title="${key}"></div>`);
+    }
+    heatmap.innerHTML = cells.join('');
+  }
+
+  function renderShop(){
+    const shopList = document.getElementById('shopList');
+    shopList.innerHTML = SHOP.map(item => `
+      <div class="shop-item">
+        <div class="shop-icon">${item.icon}</div>
+        <div class="shop-info">
+          <div class="shop-name">${item.name}</div>
+          <div class="shop-note">${item.note}</div>
+        </div>
+        <div class="shop-buy">
+          <button type="button" data-id="${item.id}" ${data.credits < item.cost ? 'disabled' : ''}>購入する</button>
+          <div class="shop-cost">${item.cost}クレジット</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderProgram(){
+    const list = document.getElementById('programList');
+    const entries = SHOP.filter(item => data.program[item.id] > 0);
+    if(entries.length === 0){
+      list.innerHTML = '<p class="empty-note">まだ何も購入していません。クレジットを貯めて花火を揃えましょう。</p>';
+      document.getElementById('showBtn').disabled = true;
+    } else {
+      list.innerHTML = entries.map(item => `
+        <div class="program-row">
+          <span class="icon">${item.icon}</span>
+          <span class="name">${item.name.replace(/ ×1.*$/, '')}</span>
+          <span class="count">×${data.program[item.id]}</span>
+        </div>
+      `).join('');
+      document.getElementById('showBtn').disabled = false;
+    }
+  }
+
+  function render(){
+    const entry = todayEntry();
+    const count = entry[currentEx];
+    const goal = data.goals[currentEx];
+
+    document.getElementById('countNumber').textContent = count;
+    document.getElementById('goalValue').textContent = goal;
+
+    const statusEl = document.getElementById('goalStatus');
+    if(count >= goal){
+      statusEl.textContent = '✓ 今日の目標達成';
+      statusEl.className = 'goal-status done';
+    } else {
+      statusEl.textContent = `目標まであと ${goal - count} 回`;
+      statusEl.className = 'goal-status pending';
+    }
+
+    document.getElementById('streakNum').textContent = calcStreak();
+    document.getElementById('totalDaysNum').textContent = calcTotalDays();
+    document.getElementById('creditNum').textContent = data.credits;
+
+    renderHeatmap();
+    renderShop();
+    renderProgram();
+  }
+
+  // ---------- タブ切り替え ----------
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    currentEx = btn.dataset.ex;
+    [...document.getElementById('tabs').children].forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+
+  // ---------- タップカウント ----------
+  document.getElementById('tapBtn').addEventListener('click', () => {
+    const entry = todayEntry();
+    entry[currentEx] += 1;
+    checkAndGrantCredits();
+    saveData();
+    render();
+  });
+  document.getElementById('minusBtn').addEventListener('click', () => {
+    const entry = todayEntry();
+    entry[currentEx] = Math.max(0, entry[currentEx] - 1);
+    saveData();
+    render();
+  });
+
+  // ---------- 目標編集 ----------
+  const editOverlay = document.getElementById('editOverlay');
+  const goalInput = document.getElementById('goalInput');
+  document.getElementById('editGoalBtn').addEventListener('click', () => {
+    goalInput.value = data.goals[currentEx];
+    editOverlay.classList.add('show');
+  });
+  document.getElementById('goalCancelBtn').addEventListener('click', () => {
+    editOverlay.classList.remove('show');
+  });
+  goalInput.addEventListener('input', () => {
+    goalInput.value = goalInput.value.replace(/\D/g, '');
+  });
+  document.getElementById('goalSaveBtn').addEventListener('click', () => {
+    const v = Number(goalInput.value);
+    if(v > 0){ data.goals[currentEx] = v; saveData(); render(); }
+    editOverlay.classList.remove('show');
+  });
+
+  // ---------- ショップ購入 ----------
+  document.getElementById('shopList').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-id]');
+    if(!btn) return;
+    const item = SHOP.find(i => i.id === btn.dataset.id);
+    if(!item || data.credits < item.cost) return;
+    data.credits -= item.cost;
+    data.program[item.id] = (data.program[item.id] || 0) + 1;
+    saveData();
+    render();
+    showToast(`${item.name} を購入しました`);
+  });
+
+  // ---------- 花火大会を開催する ----------
+  const launchStage = document.getElementById('launchStage');
+  const SPARK_COLORS = ['#ff8a5c','#f7b733','#ffd23f','#ff5a36','#fff3d0','#8b6fd6'];
+
+  function playBurst(scale){
+    launchStage.style.height = '170px';
+    const dot = document.createElement('div');
+    dot.className = 'launch-dot';
+    launchStage.appendChild(dot);
+    requestAnimationFrame(() => dot.classList.add('go'));
+    setTimeout(() => {
+      const count = 10 + scale * 6;
+      for(let i=0;i<count;i++){
+        const angle = (i/count)*Math.PI*2;
+        const dist = (50 + scale*20) + Math.random()*20;
+        const spark = document.createElement('div');
+        spark.className = 'spark';
+        spark.style.background = SPARK_COLORS[i % SPARK_COLORS.length];
+        spark.style.setProperty('--dx', `${Math.cos(angle)*dist}px`);
+        spark.style.setProperty('--dy', `${Math.sin(angle)*dist - 10}px`);
+        launchStage.appendChild(spark);
+        requestAnimationFrame(() => spark.classList.add('go'));
+      }
+    }, 500);
+  }
+
+  document.getElementById('showBtn').addEventListener('click', () => {
+    const playlist = [];
+    SHOP.forEach(item => {
+      const n = data.program[item.id] || 0;
+      for(let i=0;i<n;i++) playlist.push(item);
+    });
+    if(playlist.length === 0) return;
+
+    document.getElementById('showBtn').disabled = true;
+    const caption = document.getElementById('showCaption');
+    let i = 0;
+    function next(){
+      launchStage.innerHTML = '';
+      if(i >= playlist.length){
+        caption.textContent = 'ご来場ありがとうございました。';
+        document.getElementById('showBtn').disabled = false;
+        return;
+      }
+      const item = playlist[i];
+      const scaleMap = { go5:1, shakudama:2, starmine:3, nishaku:4, niagara:4, sanshaku:5 };
+      caption.textContent = `${item.icon} ${item.name.replace(/ ×1.*$/, '')}`;
+      playBurst(scaleMap[item.id] || 1);
+      i++;
+      setTimeout(next, 1400);
+    }
+    next();
+  });
+
+  // ---------- 初期化 ----------
+  render();
+</script>
+
+</body>
+</html>
